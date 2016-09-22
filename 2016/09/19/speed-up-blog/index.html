@@ -295,7 +295,7 @@ github pages * 1
         </li>
         
             <li class="post-action">
-                <a class="post-action-btn btn btn--default" href="#ds-thread">
+                <a class="post-action-btn btn btn--default" href="#disqus_thread">
                     <i class="fa fa-comment-o"></i>
                 </a>
             </li>
@@ -313,10 +313,9 @@ github pages * 1
 
         
             
-                <div id="ds-thread" class="ds-thread" data-thread-key="2016/09/19/speed-up-blog/"
-     data-title="使用nginx反向代理加速github pages访问速度" data-url="http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
-
             
         
     </div>
@@ -377,7 +376,7 @@ github pages * 1
         </li>
         
             <li class="post-action">
-                <a class="post-action-btn btn btn--default" href="#ds-thread">
+                <a class="post-action-btn btn btn--default" href="#disqus_thread">
                     <i class="fa fa-comment-o"></i>
                 </a>
             </li>
@@ -462,15 +461,20 @@ github pages * 1
 <!--SCRIPTS END-->
 
     
-        <script type="text/javascript">
-            var duoshuoQuery = {short_name:'danteblog.duoshuo.com'};
+        <script>
+             var disqus_config = function () {
+                 this.page.url = 'http://blog.dantetheone.site/2016/09/19/speed-up-blog/';
+                 
+                    this.page.identifier = '2016/09/19/speed-up-blog/';
+                                  
+             };
             (function() {
-                var ds = document.createElement('script');
-                ds.type = 'text/javascript';ds.async = true;
-                ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-                ds.charset = 'UTF-8';
-                (document.getElementsByTagName('head')[0]
-                || document.getElementsByTagName('body')[0]).appendChild(ds);
+                var d = document, s = d.createElement('script');
+                var disqus_shortname = 'dantes-blog.disqus.com';
+                s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
             })();
         </script>
     
