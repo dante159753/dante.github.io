@@ -6,23 +6,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="Dante&#39;s Home">
-    <title>使用git在服务器和客户端之间同步代码 - Dante&#39;s Home</title>
+    <title>git中的跨平台行尾问题 - Dante&#39;s Home</title>
     <meta name="author" content="Yanzhao Wang">
     
     
         <link rel="icon" href="http://blog.dantetheone.site/assets/images/logo.png">
     
     
-    <meta name="description" content="今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。">
+    <meta name="description" content="行尾一直都是一个很头疼的问题。Windows 上采用的是 CR(Carriage Return，即回车) + LF(Line Feed，即换行)的双字符行尾，也就是我们熟悉的 \r\n ，Linux 上采用的是 LF 的单字符行尾，Mac OS 在 X 以前采用的是 CR 的行尾，在 X 之后改成了 LF 的行尾。如此混乱的情况下，如果没有处理好跨平台的行尾问题，很容易出现奇奇怪怪的问题，比如莫名">
 <meta property="og:type" content="blog">
-<meta property="og:title" content="使用git在服务器和客户端之间同步代码">
-<meta property="og:url" content="http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/index.html">
+<meta property="og:title" content="git中的跨平台行尾问题">
+<meta property="og:url" content="http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/index.html">
 <meta property="og:site_name" content="Dante's Home">
-<meta property="og:description" content="今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。">
-<meta property="og:updated_time" content="2016-09-23T14:01:48.491Z">
+<meta property="og:description" content="行尾一直都是一个很头疼的问题。Windows 上采用的是 CR(Carriage Return，即回车) + LF(Line Feed，即换行)的双字符行尾，也就是我们熟悉的 \r\n ，Linux 上采用的是 LF 的单字符行尾，Mac OS 在 X 以前采用的是 CR 的行尾，在 X 之后改成了 LF 的行尾。如此混乱的情况下，如果没有处理好跨平台的行尾问题，很容易出现奇奇怪怪的问题，比如莫名">
+<meta property="og:updated_time" content="2016-09-23T15:06:50.336Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="使用git在服务器和客户端之间同步代码">
-<meta name="twitter:description" content="今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。">
+<meta name="twitter:title" content="git中的跨平台行尾问题">
+<meta name="twitter:description" content="行尾一直都是一个很头疼的问题。Windows 上采用的是 CR(Carriage Return，即回车) + LF(Line Feed，即换行)的双字符行尾，也就是我们熟悉的 \r\n ，Linux 上采用的是 LF 的单字符行尾，Mac OS 在 X 以前采用的是 CR 的行尾，在 X 之后改成了 LF 的行尾。如此混乱的情况下，如果没有处理好跨平台的行尾问题，很容易出现奇奇怪怪的问题，比如莫名">
     
     
         
@@ -191,11 +191,11 @@
         <div class="post-header main-content-wrap text-left">
     
         <h1 class="post-title" itemprop="headline">
-            使用git在服务器和客户端之间同步代码
+            git中的跨平台行尾问题
         </h1>
     
     <div class="post-meta">
-    <time itemprop="datePublished" datetime="2016-09-23T21:38:57+08:00">
+    <time itemprop="datePublished" datetime="2016-09-23T22:05:40+08:00">
 	
 		    9月 23, 2016
     	
@@ -207,17 +207,14 @@
     
     <div class="post-content markdown" itemprop="articleBody">
         <div class="main-content-wrap">
-            <p>今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。<br><a id="more"></a><br>首先，修改代码一定要用版本管理了，我们公司没有现成的 svn 服务器，所以我就想使用 git 。然后，需要在服务器和客户端之间同步代码。显然不能每次都把修改后的代码复制到服务器上，这样很麻烦，而且速度也很慢。比较明显的想法是在服务器上搭建 git ，创建代码的仓库，然后本地通过 push 来将修改提交到服务器上的仓库，服务器上再进行测试。</p>
-<h1 id="在服务器上创建裸仓库"><a href="#在服务器上创建裸仓库" class="headerlink" title="在服务器上创建裸仓库"></a>在服务器上创建裸仓库</h1><p>假设现在代码已经在我的本地，在<code>my_project</code>这个目录中。我在本地使用<code>git init</code>初始化了这份代码的仓库。那么我们要做的就是把这个仓库复制一份放到服务器上。<br>来到<code>my_project</code>目录的上一级，首先使用<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git clone --bare my_project my_project.git</div></pre></td></tr></table></figure></p>
-<p>来创建 <code>my_project</code> 项目的一个 <strong>裸仓库</strong> 。裸仓库就是不包含工作目录的仓库（也就是只包含了 git 的历史存档，以及 git 创建的特殊数据文件，<strong>不包含代码</strong> ）。</p>
-<p>命令执行完之后，在你本地项目目录的旁边会生成一个<code>my_project.git</code>文件夹，现在使用<code>scp</code>把它传到服务器上<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp -r my_project.git user@git.example.com:/opt/git</div></pre></td></tr></table></figure></p>
-<p>如果你不熟悉scp的使用，可以去查一查，这是一个使用 ssh 在 linux 间传输文件的好工具。如果你使用的是 windows ，你可以在 git bash 中调用这个命令。命令会把 <code>project.git</code> 目录复制到服务器上的 <code>/opt/</code> 目录下，并重命名为 <code>git</code> 。</p>
-<p>然后，在本地仓库执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote add server user@git.example.com:/opt/git</div></pre></td></tr></table></figure></p>
-<p>就可以将这个远程仓库加入你本地 git 的 remote 列表，并命名为 server 。你以后就可以使用<br><code>git push server</code> 和 <code>git pull server</code> 来方便的同步代码了。</p>
-<h1 id="在服务器上克隆一个带有工作目录的仓库副本"><a href="#在服务器上克隆一个带有工作目录的仓库副本" class="headerlink" title="在服务器上克隆一个带有工作目录的仓库副本"></a>在服务器上克隆一个带有工作目录的仓库副本</h1><p>上面的步骤并没有把我的问题完全解决，因为我们创建的是裸仓库，没有工作目录，也就没有代码，所以无法进行执行与测试。</p>
-<p>为了解决这个问题，我们需要在服务器上克隆一个带有工作目录的仓库副本。这里可能有人会有疑问，那干嘛不一开始就让服务器上的仓库是带有工作目录的呢？这样我们进行本地推送之后不就可以直接改变这个仓库里的代码了吗？</p>
-<p>这样做的问题在于，如果我在服务器上的工作目录里做了修改，那么来自我计算机的推送就会把服务器上的工作目录搞乱。因此， git 默认情况下是 <strong>不允许</strong> 推送修改到一个非裸仓库的（也就是说如果不是裸仓库你就没法 push ，当然可以通过配置来设为允许）。</p>
-<h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><p>执行 <code>git clone /opt/git</code> 就可以在当前目录下克隆一个 <code>/opt/git</code> 的副本，这个克隆出来的是有工作目录的。<br>这样，就可以在这个克隆的目录中执行代码了。这样如果我修改了代码，那我要先从本地推送到服务器的裸仓库，再从克隆的仓库里拉取裸仓库里的更新。</p>
+            <p>行尾一直都是一个很头疼的问题。Windows 上采用的是 <code>CR</code>(Carriage Return，即回车) + <code>LF</code>(Line Feed，即换行)的双字符行尾，也就是我们熟悉的 <code>\r\n</code> ，Linux 上采用的是 <code>LF</code> 的单字符行尾，Mac OS 在 X 以前采用的是 <code>CR</code> 的行尾，在 X 之后改成了 <code>LF</code> 的行尾。如此混乱的情况下，如果没有处理好跨平台的行尾问题，很容易出现奇奇怪怪的问题，比如莫名其妙的编译不通过。所以我整理了一下 git 中处理跨平台行尾问题的解决方案。<br><a id="more"></a></p>
+<h1 id="git中自动转换行尾的配置"><a href="#git中自动转换行尾的配置" class="headerlink" title="git中自动转换行尾的配置"></a>git中自动转换行尾的配置</h1><p>git 中是有自动转换行尾的配置项的，就是 <code>core.autocrlf</code> 这个。我在 Windows 上的 git 这一项默认是开启的(true)。你可以通过<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config --get --global core.autocrlf</div></pre></td></tr></table></figure></p>
+<p>查看选项的开启情况。如果没有开始，可以使用<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config --global core.autocrlf true</div></pre></td></tr></table></figure></p>
+<p>打开自动转换。</p>
+<p>设置<code>core.autocrlf</code>为 true后，如果提交到版本库中的文件行尾为 CRLF ，则自动被替换为 LF ，如果行尾为 LF 则不替换。这样版本库中文件的行尾都是 LF 的。<br>在 Windows 平台上执行 <code>Checkout</code> 动作时，会把所有 LF 的行尾替换为 CRLF 放到现在的工作目录里，因此 Windows 中 Checkout 后的工作目录里的文件都是 CRLF 的行尾。<br>同样的 git 库如果在 Linux 上，则 Checkout 后不会修改行尾，文件都是 LF 的行尾。<br>Mac 上的情况同 Linux ，使用 CR 作为行尾已经是上古时代的事情了，我们就不管了。</p>
+<h1 id="手动配置行尾的转换"><a href="#手动配置行尾的转换" class="headerlink" title="手动配置行尾的转换"></a>手动配置行尾的转换</h1><p>自动的行尾转换非常方便，绝大多数情况下都能满足我们的需求。但自动的毕竟没有太智能，有可能你的目录中有数据文件是不需要转换行尾的，git 自动给你转换了反而可能带来问题。这种情况下你就需要手动进行配置哪些文件需要转换行尾了。<br>配置的名字是 <code>.gitattributes</code> ，放置在你代码库的根目录。<br>下面是一份配置的示例<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"># 设置默认行为，就是把文件当成文本文件替换行尾</div><div class="line">* text=auto</div><div class="line"></div><div class="line"># 显式设置为文本文件，替换行尾，Checkout 时转换为当前系统的行尾</div><div class="line">*.c text</div><div class="line">*.h text</div><div class="line"></div><div class="line"># 显式设置为文本文件，替换行尾，并在 Checkout 时转换为 CRLF 行尾</div><div class="line">*.sln text eol=crlf</div><div class="line"></div><div class="line"># 把这些文件当成二进制文件，不替换行尾</div><div class="line">*.png binary</div><div class="line">*.jpg binary</div></pre></td></tr></table></figure></p>
+<h1 id="修改行尾后代码库的刷新"><a href="#修改行尾后代码库的刷新" class="headerlink" title="修改行尾后代码库的刷新"></a>修改行尾后代码库的刷新</h1><p>修改了行尾配置后，git 不会自动修改已经入库的文件的行尾，你需要进行一下手动刷新，下面是刷新的步骤(网上抄的，加了点注释)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"># 保存当前的文件</div><div class="line">git add . -u</div><div class="line">git commit -m &quot;Saving files before refreshing line endings&quot;</div><div class="line"># 让所有的文件脱离 git 的管理</div><div class="line">git rm --cached -r .</div><div class="line"># 把工作目录的所有文件重置为上次提交的状态(我觉得这条命令好像没啥意义，因为上条并不会修改工作目录的文件。各位大佬有不同理解的话请指教)</div><div class="line">git reset --hard</div><div class="line"># 重新把所有文件加入 git 的管理中</div><div class="line">git add .</div><div class="line"># 提交，提交后版本库中的文件就都是按照你的配置来的了</div><div class="line">git commit -m &quot;Normalize all the line endings&quot;</div></pre></td></tr></table></figure></p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://superuser.com/questions/439440/did-mac-os-lion-switch-to-using-line-feeds-lf-n-for-line-breaks-instead-of" target="_blank" rel="external">http://superuser.com/questions/439440/did-mac-os-lion-switch-to-using-line-feeds-lf-n-for-line-breaks-instead-of</a><br><a href="https://en.wikipedia.org/wiki/Newline" target="_blank" rel="external">https://en.wikipedia.org/wiki/Newline</a><br><a href="https://help.github.com/articles/dealing-with-line-endings/" target="_blank" rel="external">https://help.github.com/articles/dealing-with-line-endings/</a><br><a href="http://stackoverflow.com/questions/1967370/git-replacing-lf-with-crlf" target="_blank" rel="external">http://stackoverflow.com/questions/1967370/git-replacing-lf-with-crlf</a></p>
 
             
         </div>
@@ -236,7 +233,7 @@
         <ul class="post-actions post-action-nav">
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/23/deal-with-line-ending-in-git/"  data-tooltip="git中的跨平台行尾问题">
+                    <a class="post-action-btn btn btn--disabled">
                 
                     <i class="fa fa-angle-left"></i>
                     <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
@@ -244,7 +241,7 @@
             </li>
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/19/speed-up-blog/" data-tooltip="使用nginx反向代理加速github pages访问速度">
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/23/Synchronize-code-between-server-and-client-using-git/" data-tooltip="使用git在服务器和客户端之间同步代码">
                 
                     <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
                     <i class="fa fa-angle-right"></i>
@@ -259,17 +256,17 @@
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-google-plus"></i>
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-facebook-official"></i>
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-twitter"></i>
             </a>
         </li>
@@ -317,7 +314,7 @@
         <ul class="post-actions post-action-nav">
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/23/deal-with-line-ending-in-git/"  data-tooltip="git中的跨平台行尾问题">
+                    <a class="post-action-btn btn btn--disabled">
                 
                     <i class="fa fa-angle-left"></i>
                     <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
@@ -325,7 +322,7 @@
             </li>
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/19/speed-up-blog/" data-tooltip="使用nginx反向代理加速github pages访问速度">
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/23/Synchronize-code-between-server-and-client-using-git/" data-tooltip="使用git在服务器和客户端之间同步代码">
                 
                     <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
                     <i class="fa fa-angle-right"></i>
@@ -340,17 +337,17 @@
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-google-plus"></i>
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-facebook-official"></i>
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-twitter"></i>
             </a>
         </li>
@@ -376,17 +373,17 @@
                 <div id="share-options-bar" class="share-options-bar" data-behavior="3">
     <ul class="share-options">
         <li class="share-option">
-            <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-google-plus"></i><span class="">分享到 Google+</span>
             </a>
         </li>
         <li class="share-option">
-            <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-facebook-official"></i><span>分享到 Facebook</span>
             </a>
         </li>
         <li class="share-option">
-            <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+            <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/">
                 <i class="fa fa-twitter"></i><span>分享到 Twitter</span>
             </a>
         </li>
@@ -443,9 +440,9 @@
     
         <script>
              var disqus_config = function () {
-                 this.page.url = 'http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/';
+                 this.page.url = 'http://blog.dantetheone.site/2016/09/23/deal-with-line-ending-in-git/';
                  
-                    this.page.identifier = '2016/09/23/Synchronize-code-between-server-and-client-using-git/';
+                    this.page.identifier = '2016/09/23/deal-with-line-ending-in-git/';
                                   
              };
             (function() {
