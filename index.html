@@ -185,7 +185,7 @@
 <section class="postShorten-group main-content-wrap">
     
     
-    <article class="postShorten postShorten--thumbnailimg-bottom" itemscope itemType="http://schema.org/BlogPosting">
+    <article class="postShorten postShorten--thumbnailimg-right" itemscope itemType="http://schema.org/BlogPosting">
         <div class="postShorten-wrap">
             
             <div class="postShorten-header">
@@ -207,34 +207,14 @@
 
             </div>
             
-                <div class="postShorten-content" itemprop="articleBody">
+                <div class="postShorten-excerpt" itemprop="articleBody">
                     <p>博客建好后，本想可以安心写作了，没想到墙内访问慢的一笔，作为处女座当然不能忍。所以这两天就折腾着用 <code>阿里云vps</code> + <code>nginx</code> 搭了一个反向代理。</p>
 <p>本来以为会很简单的，没想到折腾了两天才搞定。。下面就说说我的过程和遇到的坑吧</p>
-<h1 id="原材料"><a href="#原材料" class="headerlink" title="原材料"></a>原材料</h1><ul>
-<li>阿里云vps * 1</li>
-<li>万网域名 * 1</li>
-<li>github pages * 1</li>
-</ul>
-<p>这里主要关注反向代理，具体怎么搭github pages怎么装nginx就不说了，网上有很多资料</p>
-<h1 id="修改原来的CNAME解析记录"><a href="#修改原来的CNAME解析记录" class="headerlink" title="修改原来的CNAME解析记录"></a>修改原来的CNAME解析记录</h1><p>这一步是因为我以前是用<code>CNAME</code>记录把 blog.dantetheone.site 指向 dante159753.github.io的，要搭反向代理就不能再用<code>CNAME</code>了。如果你以前没用CNAME的话，直接在阿里云控制台新建一条<code>A</code>记录，指向你的VPS地址就好了。</p>
-<p>首先是改DNS解析，在阿里云控制台把这条解析记录的类型改为 <code>A</code> ，记录值改为vps地址即可。</p>
-<p>然后，因为github pages要使用CNAME还需要把一个CNAME文件放在github pages的git库根目录，这里我不再使用CNAME了，所以要把这个CNAME文件删掉，否则无法正常访问。</p>
-<h1 id="配置nginx实现反向代理"><a href="#配置nginx实现反向代理" class="headerlink" title="配置nginx实现反向代理"></a>配置nginx实现反向代理</h1><p>首先装好nginx，配置nginx.conf文件，我的配置文件是位于/etc/nginx/下。<br>在http层加入以下内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">proxy_connect_timeout    5;</div><div class="line">proxy_read_timeout       60;</div><div class="line">proxy_send_timeout       5;</div><div class="line">proxy_buffer_size        16k;</div><div class="line">proxy_buffers            4 64k;</div><div class="line">proxy_busy_buffers_size 128k;</div><div class="line">proxy_temp_file_write_size 128k;</div><div class="line">proxy_temp_path   /home/cache/temp; #临时文件目录</div><div class="line">proxy_cache_path  /home/cache/path levels=1:2 keys_zone=cache_one:5m inactive=1d max_size=1g;</div><div class="line">#5m为内存占用，1g为最大硬盘占用，cache_one为缓存区名字，如果修改则下文的配置亦要相应修改。inactive为缓存失效时间，这里是如果1天之内缓存文件未被访问，则删除缓存文件；如果被访问了，则重新开始计时。</div></pre></td></tr></table></figure></p>
-<p>然后是server层的配置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">server&#123;</div><div class="line">    client_max_body_size 50m; </div><div class="line">    client_body_buffer_size 256k;</div><div class="line">    client_header_timeout 3m;</div><div class="line">    client_body_timeout 3m;</div><div class="line">    send_timeout 3m;</div><div class="line">    # 上面这堆也是抄的网上的缓存设定</div><div class="line">    listen 80;</div><div class="line">    server_name blog.dantetheone.site;  # 因为我的vps需要处理多个域名的请求，所以这里指定这个server层只处理来自blog.dantetheone.site的请求</div><div class="line">    location / &#123;</div><div class="line">        proxy_pass http://dante159753.github.io; # github pages的地址</div><div class="line">        proxy_cache cache_one; # 前面设置的缓存区的名字</div><div class="line">        proxy_cache_valid 200 304 3d; # 设定对应请求缓存的有效期，这里设置的是状态码为200和304的请求缓存3天。这个跟上面的超时时间的区别在于，只要到了3天的期限，缓存就会被删除，不管有没有访问。</div><div class="line">        proxy_cache_key $host$uri$is_args$args;</div><div class="line">        expires 10d; # 这里是发送给客户端的超时时间，客户端浏览器接受到这个之后，这个页面会在本地缓存10天</div><div class="line"></div><div class="line">        proxy_set_header X-Real-IP $remote_addr; # 设置http头，让传递到后台服务器的ip为客户端的ip</div><div class="line">        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # 设置代理记录，如果有多级代理的话可以让后面的代理知道前面所有代理的ip</div><div class="line">    &#125;</div><div class="line">    access_log /root/nginx-log/blog.log; # 配置访问日志路径</div><div class="line">    error_log /root/nginx-log/blog-error.log; # 配置错误日志路径</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p>这里要注意你配置的临时文件目录的权限，我刚开始设到了root的个人目录下，然而nginx运行时使用的是nginx这个用户，它没有访问root个人目录的权限，所以在log里一直报错。如果你也遇到了类似的问题，检查下你配置的目录，及其所有的祖先目录，有没有给nginx访问的权限。</p>
-<p>关于缓存超时时间的问题，我在注释里简单解释了一下，如果你没有看懂，<a href="http://blog.csdn.net/brainkick/article/details/8719248" target="_blank" rel="external">看这里</a></p>
-<p>如果你的代理有很多层，那X-Forwarded-For这个头你需要搞明白，<a href="https://imququ.com/post/x-forwarded-for-header-in-http.html" target="_blank" rel="external">这里</a>有比较详细的解释。</p>
-<h1 id="搞定"><a href="#搞定" class="headerlink" title="搞定"></a>搞定</h1><p>配好配置后，用<code>nginx -s reload</code>让nginx重新加载配置文件，大功告成。<br>如果代理有问题，你可以根据error_log定位错误，然后上网搜一搜，或者你不嫌我菜的话在下面提问也可以:)</p>
-
                     
+                        <a href="/2016/09/19/speed-up-blog/" class="postShorten-excerpt_link link">
+                            阅读全文
+                        </a>
                         
-                    
-                    
-                        <p>
-                            <a href="/2016/09/19/speed-up-blog/#post-footer" class="postShorten-excerpt_link link">
-                                注释和共享
-                            </a>
-                        </p>
                     
                 </div>
             
