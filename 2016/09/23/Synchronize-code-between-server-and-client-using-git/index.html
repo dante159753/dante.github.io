@@ -6,26 +6,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="Dante&#39;s Home">
-    <title>使用nginx反向代理加速github pages访问速度 - Dante&#39;s Home</title>
+    <title>使用git在服务器和客户端之间同步代码 - Dante&#39;s Home</title>
     <meta name="author" content="Yanzhao Wang">
     
     
         <link rel="icon" href="http://blog.dantetheone.site/assets/images/logo.png">
     
     
-    <meta name="description" content="博客建好后，本想可以安心写作了，没想到墙内访问慢的一笔，作为处女座当然不能忍。所以这两天就折腾着用 阿里云vps + nginx 搭了一个反向代理。
-本来以为会很简单的，没想到折腾了两天才搞定。。下面就说说我的过程和遇到的坑吧">
+    <meta name="description" content="今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。">
 <meta property="og:type" content="blog">
-<meta property="og:title" content="使用nginx反向代理加速github pages访问速度">
-<meta property="og:url" content="http://blog.dantetheone.site/2016/09/19/speed-up-blog/index.html">
+<meta property="og:title" content="使用git在服务器和客户端之间同步代码">
+<meta property="og:url" content="http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/index.html">
 <meta property="og:site_name" content="Dante's Home">
-<meta property="og:description" content="博客建好后，本想可以安心写作了，没想到墙内访问慢的一笔，作为处女座当然不能忍。所以这两天就折腾着用 阿里云vps + nginx 搭了一个反向代理。
-本来以为会很简单的，没想到折腾了两天才搞定。。下面就说说我的过程和遇到的坑吧">
-<meta property="og:updated_time" content="2016-09-23T12:58:57.641Z">
+<meta property="og:description" content="今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。">
+<meta property="og:updated_time" content="2016-09-23T14:01:48.491Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="使用nginx反向代理加速github pages访问速度">
-<meta name="twitter:description" content="博客建好后，本想可以安心写作了，没想到墙内访问慢的一笔，作为处女座当然不能忍。所以这两天就折腾着用 阿里云vps + nginx 搭了一个反向代理。
-本来以为会很简单的，没想到折腾了两天才搞定。。下面就说说我的过程和遇到的坑吧">
+<meta name="twitter:title" content="使用git在服务器和客户端之间同步代码">
+<meta name="twitter:description" content="今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。">
     
     
         
@@ -194,13 +191,13 @@
         <div class="post-header main-content-wrap text-left">
     
         <h1 class="post-title" itemprop="headline">
-            使用nginx反向代理加速github pages访问速度
+            使用git在服务器和客户端之间同步代码
         </h1>
     
     <div class="post-meta">
-    <time itemprop="datePublished" datetime="2016-09-19T11:31:02+08:00">
+    <time itemprop="datePublished" datetime="2016-09-23T21:38:57+08:00">
 	
-		    9月 19, 2016
+		    9月 23, 2016
     	
     </time>
     
@@ -210,24 +207,17 @@
     
     <div class="post-content markdown" itemprop="articleBody">
         <div class="main-content-wrap">
-            <p>博客建好后，本想可以安心写作了，没想到墙内访问慢的一笔，作为处女座当然不能忍。所以这两天就折腾着用 <code>阿里云vps</code> + <code>nginx</code> 搭了一个反向代理。</p>
-<p>本来以为会很简单的，没想到折腾了两天才搞定。。下面就说说我的过程和遇到的坑吧</p>
-<a id="more"></a>
-<h1 id="原材料"><a href="#原材料" class="headerlink" title="原材料"></a>原材料</h1><ul>
-<li>阿里云vps * 1</li>
-<li>万网域名 * 1</li>
-<li>github pages * 1</li>
-</ul>
-<p>这里主要关注反向代理，具体怎么搭github pages怎么装nginx就不说了，网上有很多资料</p>
-<h1 id="修改原来的CNAME解析记录"><a href="#修改原来的CNAME解析记录" class="headerlink" title="修改原来的CNAME解析记录"></a>修改原来的CNAME解析记录</h1><p>这一步是因为我以前是用<code>CNAME</code>记录把 blog.dantetheone.site 指向 dante159753.github.io的，要搭反向代理就不能再用<code>CNAME</code>了。如果你以前没用CNAME的话，直接在阿里云控制台新建一条<code>A</code>记录，指向你的VPS地址就好了。</p>
-<p>首先是改DNS解析，在阿里云控制台把这条解析记录的类型改为 <code>A</code> ，记录值改为vps地址即可。</p>
-<p>然后，因为github pages要使用CNAME还需要把一个CNAME文件放在github pages的git库根目录，这里我不再使用CNAME了，所以要把这个CNAME文件删掉，否则无法正常访问。</p>
-<h1 id="配置nginx实现反向代理"><a href="#配置nginx实现反向代理" class="headerlink" title="配置nginx实现反向代理"></a>配置nginx实现反向代理</h1><p>首先装好nginx，配置nginx.conf文件，我的配置文件是位于/etc/nginx/下。<br>在http层加入以下内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">proxy_connect_timeout    5;</div><div class="line">proxy_read_timeout       60;</div><div class="line">proxy_send_timeout       5;</div><div class="line">proxy_buffer_size        16k;</div><div class="line">proxy_buffers            4 64k;</div><div class="line">proxy_busy_buffers_size 128k;</div><div class="line">proxy_temp_file_write_size 128k;</div><div class="line">proxy_temp_path   /home/cache/temp; #临时文件目录</div><div class="line">proxy_cache_path  /home/cache/path levels=1:2 keys_zone=cache_one:5m inactive=1d max_size=1g;</div><div class="line">#5m为内存占用，1g为最大硬盘占用，cache_one为缓存区名字，如果修改则下文的配置亦要相应修改。inactive为缓存失效时间，这里是如果1天之内缓存文件未被访问，则删除缓存文件；如果被访问了，则重新开始计时。</div></pre></td></tr></table></figure></p>
-<p>然后是server层的配置<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">server&#123;</div><div class="line">    client_max_body_size 50m; </div><div class="line">    client_body_buffer_size 256k;</div><div class="line">    client_header_timeout 3m;</div><div class="line">    client_body_timeout 3m;</div><div class="line">    send_timeout 3m;</div><div class="line">    # 上面这堆也是抄的网上的缓存设定</div><div class="line">    listen 80;</div><div class="line">    server_name blog.dantetheone.site;  # 因为我的vps需要处理多个域名的请求，所以这里指定这个server层只处理来自blog.dantetheone.site的请求</div><div class="line">    location / &#123;</div><div class="line">        proxy_pass http://dante159753.github.io; # github pages的地址</div><div class="line">        proxy_cache cache_one; # 前面设置的缓存区的名字</div><div class="line">        proxy_cache_valid 200 304 3d; # 设定对应请求缓存的有效期，这里设置的是状态码为200和304的请求缓存3天。这个跟上面的超时时间的区别在于，只要到了3天的期限，缓存就会被删除，不管有没有访问。</div><div class="line">        proxy_cache_key $host$uri$is_args$args;</div><div class="line">        expires 10d; # 这里是发送给客户端的超时时间，客户端浏览器接受到这个之后，这个页面会在本地缓存10天</div><div class="line"></div><div class="line">        proxy_set_header X-Real-IP $remote_addr; # 设置http头，让传递到后台服务器的ip为客户端的ip</div><div class="line">        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # 设置代理记录，如果有多级代理的话可以让后面的代理知道前面所有代理的ip</div><div class="line">    &#125;</div><div class="line">    access_log /root/nginx-log/blog.log; # 配置访问日志路径</div><div class="line">    error_log /root/nginx-log/blog-error.log; # 配置错误日志路径</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p>这里要注意你配置的临时文件目录的权限，我刚开始设到了root的个人目录下，然而nginx运行时使用的是nginx这个用户，它没有访问root个人目录的权限，所以在log里一直报错。如果你也遇到了类似的问题，检查下你配置的目录，及其所有的祖先目录，有没有给nginx访问的权限。</p>
-<p>关于缓存超时时间的问题，我在注释里简单解释了一下，如果你没有看懂，<a href="http://blog.csdn.net/brainkick/article/details/8719248" target="_blank" rel="external">看这里</a></p>
-<p>如果你的代理有很多层，那X-Forwarded-For这个头你需要搞明白，<a href="https://imququ.com/post/x-forwarded-for-header-in-http.html" target="_blank" rel="external">这里</a>有比较详细的解释。</p>
-<h1 id="搞定"><a href="#搞定" class="headerlink" title="搞定"></a>搞定</h1><p>配好配置后，用<code>nginx -s reload</code>让nginx重新加载配置文件，大功告成。<br>如果代理有问题，你可以根据error_log定位错误，然后上网搜一搜，或者你不嫌我菜的话在下面提问也可以:)</p>
+            <p>今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。<br><a id="more"></a><br>首先，修改代码一定要用版本管理了，我们公司没有现成的 svn 服务器，所以我就想使用 git 。然后，需要在服务器和客户端之间同步代码。显然不能每次都把修改后的代码复制到服务器上，这样很麻烦，而且速度也很慢。比较明显的想法是在服务器上搭建 git ，创建代码的仓库，然后本地通过 push 来将修改提交到服务器上的仓库，服务器上再进行测试。</p>
+<h1 id="在服务器上创建裸仓库"><a href="#在服务器上创建裸仓库" class="headerlink" title="在服务器上创建裸仓库"></a>在服务器上创建裸仓库</h1><p>假设现在代码已经在我的本地，在<code>my_project</code>这个目录中。我在本地使用<code>git init</code>初始化了这份代码的仓库。那么我们要做的就是把这个仓库复制一份放到服务器上。<br>来到<code>my_project</code>目录的上一级，首先使用<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git clone --bare my_project my_project.git</div></pre></td></tr></table></figure></p>
+<p>来创建 <code>my_project</code> 项目的一个 <strong>裸仓库</strong> 。裸仓库就是不包含工作目录的仓库（也就是只包含了 git 的历史存档，以及 git 创建的特殊数据文件，<strong>不包含代码</strong> ）。</p>
+<p>命令执行完之后，在你本地项目目录的旁边会生成一个<code>my_project.git</code>文件夹，现在使用<code>scp</code>把它传到服务器上<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scp -r my_project.git user@git.example.com:/opt/git</div></pre></td></tr></table></figure></p>
+<p>如果你不熟悉scp的使用，可以去查一查，这是一个使用 ssh 在 linux 间传输文件的好工具。如果你使用的是 windows ，你可以在 git bash 中调用这个命令。命令会把 <code>project.git</code> 目录复制到服务器上的 <code>/opt/</code> 目录下，并重命名为 <code>git</code> 。</p>
+<p>然后，在本地仓库执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git remote add server user@git.example.com:/opt/git</div></pre></td></tr></table></figure></p>
+<p>就可以将这个远程仓库加入你本地 git 的 remote 列表，并命名为 server 。你以后就可以使用<br><code>git push server</code> 和 <code>git pull server</code> 来方便的同步代码了。</p>
+<h1 id="在服务器上克隆一个带有工作目录的仓库副本"><a href="#在服务器上克隆一个带有工作目录的仓库副本" class="headerlink" title="在服务器上克隆一个带有工作目录的仓库副本"></a>在服务器上克隆一个带有工作目录的仓库副本</h1><p>上面的步骤并没有把我的问题完全解决，因为我们创建的是裸仓库，没有工作目录，也就没有代码，所以无法进行执行与测试。</p>
+<p>为了解决这个问题，我们需要在服务器上克隆一个带有工作目录的仓库副本。这里可能有人会有疑问，那干嘛不一开始就让服务器上的仓库是带有工作目录的呢？这样我们进行本地推送之后不就可以直接改变这个仓库里的代码了吗？</p>
+<p>这样做的问题在于，如果我在服务器上的工作目录里做了修改，那么来自我计算机的推送就会把服务器上的工作目录搞乱。因此， git 默认情况下是 <strong>不允许</strong> 推送修改到一个非裸仓库的（也就是说如果不是裸仓库你就没法 push ，当然可以通过配置来设为允许）。</p>
+<h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><p>执行 <code>git clone /opt/git</code> 就可以在当前目录下克隆一个 <code>/opt/git</code> 的副本，这个克隆出来的是有工作目录的。<br>这样，就可以在这个克隆的目录中执行代码了。这样如果我修改了代码，那我要先从本地推送到服务器的裸仓库，再从克隆的仓库里拉取裸仓库里的更新。</p>
 
             
         </div>
@@ -237,7 +227,7 @@
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">标签</span><br/>
                 
-    <a class="tag tag--primary tag--small t-link" href="/tags/nginx/">nginx</a>
+    <a class="tag tag--primary tag--small t-link" href="/tags/git/">git</a>
 
             </div>
         
@@ -246,7 +236,7 @@
         <ul class="post-actions post-action-nav">
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/23/Synchronize-code-between-server-and-client-using-git/"  data-tooltip="使用git在服务器和客户端之间同步代码">
+                    <a class="post-action-btn btn btn--disabled">
                 
                     <i class="fa fa-angle-left"></i>
                     <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
@@ -254,7 +244,7 @@
             </li>
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/17/hello-blog/" data-tooltip="开更开更">
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/19/speed-up-blog/" data-tooltip="使用nginx反向代理加速github pages访问速度">
                 
                     <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
                     <i class="fa fa-angle-right"></i>
@@ -269,17 +259,17 @@
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-google-plus"></i>
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-facebook-official"></i>
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-twitter"></i>
             </a>
         </li>
@@ -327,7 +317,7 @@
         <ul class="post-actions post-action-nav">
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/23/Synchronize-code-between-server-and-client-using-git/"  data-tooltip="使用git在服务器和客户端之间同步代码">
+                    <a class="post-action-btn btn btn--disabled">
                 
                     <i class="fa fa-angle-left"></i>
                     <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
@@ -335,7 +325,7 @@
             </li>
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/17/hello-blog/" data-tooltip="开更开更">
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2016/09/19/speed-up-blog/" data-tooltip="使用nginx反向代理加速github pages访问速度">
                 
                     <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
                     <i class="fa fa-angle-right"></i>
@@ -350,17 +340,17 @@
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-google-plus"></i>
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-facebook-official"></i>
             </a>
         </li>
         <li class="post-action hide-xs">
-            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-twitter"></i>
             </a>
         </li>
@@ -386,17 +376,17 @@
                 <div id="share-options-bar" class="share-options-bar" data-behavior="3">
     <ul class="share-options">
         <li class="share-option">
-            <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-google-plus"></i><span class="">分享到 Google+</span>
             </a>
         </li>
         <li class="share-option">
-            <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-facebook-official"></i><span>分享到 Facebook</span>
             </a>
         </li>
         <li class="share-option">
-            <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/19/speed-up-blog/">
+            <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
                 <i class="fa fa-twitter"></i><span>分享到 Twitter</span>
             </a>
         </li>
@@ -453,9 +443,9 @@
     
         <script>
              var disqus_config = function () {
-                 this.page.url = 'http://blog.dantetheone.site/2016/09/19/speed-up-blog/';
+                 this.page.url = 'http://blog.dantetheone.site/2016/09/23/Synchronize-code-between-server-and-client-using-git/';
                  
-                    this.page.identifier = '2016/09/19/speed-up-blog/';
+                    this.page.identifier = '2016/09/23/Synchronize-code-between-server-and-client-using-git/';
                                   
              };
             (function() {
