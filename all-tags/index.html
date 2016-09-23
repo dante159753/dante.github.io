@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="Dante&#39;s Home">
-    <title>标签: git - Dante&#39;s Home</title>
+    <title>all-tags - Dante&#39;s Home</title>
     <meta name="author" content="Yanzhao Wang">
     
     
@@ -14,11 +14,12 @@
     
     
     <meta property="og:type" content="blog">
-<meta property="og:title" content="Dante's Home">
-<meta property="og:url" content="http://blog.dantetheone.site/tags/git/index.html">
+<meta property="og:title" content="all-tags">
+<meta property="og:url" content="http://blog.dantetheone.site/all-tags/index.html">
 <meta property="og:site_name" content="Dante's Home">
+<meta property="og:updated_time" content="2016-09-23T15:11:41.007Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Dante's Home">
+<meta name="twitter:title" content="all-tags">
     
     
         
@@ -174,107 +175,79 @@
                  class="
                         hasCoverMetaIn
                         ">
-                
-    <section class="postShorten-group main-content-wrap">
-    
-    
-    <article class="postShorten postShorten--thumbnailimg-right" itemscope itemType="http://schema.org/BlogPosting">
-        <div class="postShorten-wrap">
-            
-            <div class="postShorten-header">
-                <h1 class="postShorten-title" itemprop="headline">
-                    
-                        <a class="link-unstyled" href="/2016/09/23/deal-with-line-ending-in-git/">
-                            git中的跨平台行尾问题
-                        </a>
-                    
-                </h1>
-                <div class="postShorten-meta">
-    <time itemprop="datePublished" datetime="2016-09-23T22:05:40+08:00">
-	
-		    9月 23, 2016
-    	
-    </time>
-    
-</div>
+                <div id="tags-archives" class="main-content-wrap">
+    <form id="filter-form" action="#">
+        <input name="tag" type="text" class="form-control input--xlarge" placeholder="搜索标签" autofocus="autofocus">
+    </form>
+    <h4 class="archive-result text-color-base text-xlarge"
+        data-message-zero="没有找到标签"
+        data-message-one="找到 1 个标签"
+        data-message-other="找到 {n} 个标签"></h4>
 
-            </div>
-            
-                <div class="postShorten-excerpt" itemprop="articleBody">
-                    <p>行尾一直都是一个很头疼的问题。Windows 上采用的是 <code>CR</code>(Carriage Return，即回车) + <code>LF</code>(Line Feed，即换行)的双字符行尾，也就是我们熟悉的 <code>\r\n</code> ，Linux 上采用的是 <code>LF</code> 的单字符行尾，Mac OS 在 X 以前采用的是 <code>CR</code> 的行尾，在 X 之后改成了 <code>LF</code> 的行尾。如此混乱的情况下，如果没有处理好跨平台的行尾问题，很容易出现奇奇怪怪的问题，比如莫名其妙的编译不通过。所以我整理了一下 git 中处理跨平台行尾问题的解决方案。<br>
-                    
-                        <a href="/2016/09/23/deal-with-line-ending-in-git/" class="postShorten-excerpt_link link">
-                            阅读全文
-                        </a>
-                        
-                    
-                </div>
-            
-        </div>
+        <section>
         
-            <a href="/2016/09/23/deal-with-line-ending-in-git/">
-                <div class="postShorten-thumbnailimg">
-                    <img alt="" itemprop="image" src="undefined"/>
-                </div>
+            <a class="tag tag--primary tag--small" href="#git-list" data-tag="git">
+                git
             </a>
-            
         
-    </article>
-    
-    
-    <article class="postShorten postShorten--thumbnailimg-right" itemscope itemType="http://schema.org/BlogPosting">
-        <div class="postShorten-wrap">
-            
-            <div class="postShorten-header">
-                <h1 class="postShorten-title" itemprop="headline">
-                    
-                        <a class="link-unstyled" href="/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
-                            使用git在服务器和客户端之间同步代码
-                        </a>
-                    
-                </h1>
-                <div class="postShorten-meta">
-    <time itemprop="datePublished" datetime="2016-09-23T21:38:57+08:00">
-	
-		    9月 23, 2016
-    	
-    </time>
-    
-</div>
-
-            </div>
-            
-                <div class="postShorten-excerpt" itemprop="articleBody">
-                    <p>今天在工作中遇到这样一个需求：有一份代码需要进行重构，这份代码以前没有使用过版本管理。代码重构之后的测试需要在公司服务器上进行，而代码的修改是在我的电脑上。因为是公司内部的代码，也不能传到 github 上（公司没有买私有 repo 的服务）。<br>
-                    
-                        <a href="/2016/09/23/Synchronize-code-between-server-and-client-using-git/" class="postShorten-excerpt_link link">
-                            阅读全文
-                        </a>
-                        
-                    
-                </div>
-            
-        </div>
-        
-            <a href="/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
-                <div class="postShorten-thumbnailimg">
-                    <img alt="" itemprop="image" src="undefined"/>
-                </div>
+            <a class="tag tag--primary tag--small" href="#nginx-list" data-tag="nginx">
+                nginx
             </a>
-            
         
-    </article>
-    
-    <div class="pagination-bar">
-    <ul class="pagination">
+    </section>
+    <section class="boxes">
         
+            <div id="git-list" class="archive box" data-tag="git">
+                <h4 class="archive-title">
+                    <a class="link-unstyled" href="/tags/git">
+                        git (2)
+                    </a>
+                </h4>
+                <ul class="archive-posts">
+                    
+                        <li class="archive-post">
+                            <a class="archive-post-title" href="/2016/09/23/Synchronize-code-between-server-and-client-using-git/">
+                                使用git在服务器和客户端之间同步代码
+                            </a>
+                            <span class="archive-post-date">
+                                 - 9月 23, 2016
+                            </span>
+                        </li>
+                    
+                        <li class="archive-post">
+                            <a class="archive-post-title" href="/2016/09/23/deal-with-line-ending-in-git/">
+                                git中的跨平台行尾问题
+                            </a>
+                            <span class="archive-post-date">
+                                 - 9月 23, 2016
+                            </span>
+                        </li>
+                    
+                </ul>
+            </div>
         
-        <li class="pagination-number">第 1 页 共 1 页</li>
-    </ul>
+            <div id="nginx-list" class="archive box" data-tag="nginx">
+                <h4 class="archive-title">
+                    <a class="link-unstyled" href="/tags/nginx">
+                        nginx (1)
+                    </a>
+                </h4>
+                <ul class="archive-posts">
+                    
+                        <li class="archive-post">
+                            <a class="archive-post-title" href="/2016/09/19/speed-up-blog/">
+                                使用nginx反向代理加速github pages访问速度
+                            </a>
+                            <span class="archive-post-date">
+                                 - 9月 19, 2016
+                            </span>
+                        </li>
+                    
+                </ul>
+            </div>
+        
+    </section>
 </div>
-
-</section>
-
 
                 <footer id="footer" class="main-content-wrap">
     <span class="copyrights">
